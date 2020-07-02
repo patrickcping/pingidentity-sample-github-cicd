@@ -1,4 +1,4 @@
-# Sample Github CICD Pipeline - PingFederate / PingAccess
+# Sample Github CICD Pipeline - PingFederate / PingAccess to AKS
 
 To run:
 
@@ -18,8 +18,8 @@ Set the following secrets in your repository:
 | CLUSTER_NAME | The AKS cluster name in Azure |
 | MASTER_SPACE | The namespace in the AKS cluster to deploy the software to |
 | RESOURCE_GROUP | The Azure resource group that contains the AKS cluster |
-| PINGFEDERATE_LICENSE | The full contents of the pingfederate.lic license file |
+| PINGFEDERATE_LICENSE | The full contents of the `pingfederate.lic` license file |
 | PINGFEDERATE_LICENSE_SECRET_NAME | A name to call the PingFederate license secret in the AKS cluster |
-| PINGACCESS_LICENSE | The full contents of the pingaccess.lic license file |
+| PINGACCESS_LICENSE | The full contents of the `pingaccess.lic` license file |
 | PINGACCESS_LICENSE_SECRET_NAME | A name to call the PingAccess license secret in the AKS cluster |
 
