@@ -1,0 +1,71 @@
+name: Master
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - uses: actions/checkout@master
+    
+    - uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ secrets.CLUSTER_NAME }}
+        resource-group: ${{ secrets.RESOURCE_GROUP }}
+
+    - name: Cat licenses to file
+      id: license-prep
+      run: |
+        echo "${{ secrets.PINGFEDERATE_LICENSE }}" > ./pingfederate.lic
+        echo "${{ secrets.PINGACCESS_LICENSE }}" > ./pingaccess.lic
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: ${{ secrets.MASTER_SPACE }}
+        secret-type: 'generic'
+        arguments: --from-file=./pingfederate.lic
+        secret-name: ${{ secrets.PINGFEDERATE_LICENSE_SECRET_NAME }}
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: ${{ secrets.MASTER_SPACE }}
+        secret-type: 'generic'
+        arguments: --from-file=./pingaccess.lic
+        secret-name: ${{ secrets.PINGACCESS_LICENSE_SECRET_NAME }}
+        
+    - name: Install Helm for client
+      id: install-helm-client
+      run: |
+        set -e        
+        clientversion=$(helm version --client --short | cut -d' ' -f2 | cut -d'+' -f1 | head -c 2 | tail -c 1)
+        if [ "$clientversion" == 3]; then   
+          echo The client is already using Helm 3
+          echo ::set-output name=helm::helm
+        else
+          curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get_helm.sh
+          chmod 700 get_helm.sh
+          ./get_helm.sh --version v3.0.1
+          echo ::set-output name=helm::helm
+        fi
+        
+    - name: Helm Install Ping
+      run: |
+        helm repo add pingidentity-pc https://patrickcping.github.io/ping-identity-helm-charts-repo
+        helm repo update
+
+        helm upgrade --install \
+        pingfederate --debug \
+        --set license.licenseSecretName=${{ secrets.PINGFEDERATE_LICENSE_SECRET_NAME }} \
+        --values $GITHUB_WORKSPACE/helm-values/pingfederate.yaml \
+        pingidentity-pc/pingfederate
+
+        helm upgrade --install \
+        pingaccess --debug \
+        --set license.licenseSecretName=${{ secrets.PINGACCESS_LICENSE_SECRET_NAME }} \
+        --values $GITHUB_WORKSPACE/helm-values/pingaccess.yaml \
+        pingidentity-pc/pingaccess

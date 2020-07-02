@@ -1,0 +1,45 @@
+license:
+  acceptEULA: yes
+
+pingaccess:
+  logging: DEBUG
+  
+  envs:
+    SERVER_PROFILE_URL: https://github.com/pingidentity/pingidentity-server-profiles.git
+    SERVER_PROFILE_PATH: getting-started/pingaccess
+    SERVER_PROFILE_BRANCH: master
+    
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    kubernetes.io/ingress.class: "nginx"
+
+  hosts:
+    - host: my.host.pingaccess.host.com
+      paths:
+      - path: /
+        backend:
+          servicePort: 3000
+    - host: my.host.admin.pingaccess.host.com
+      paths:
+      - path: /
+        backend:
+          servicePort: 9000
+
+  # The following section adds TLS specific configuration for the ingress descriptor.  Example:
+  tls:
+    - secretName: tls-secret-admin
+      hosts:
+        - my.host.admin.pingaccess.host.com
+    - secretName: tls-secret
+      hosts:
+        - my.host.pingaccess.host.com
+
+resources: 
+  limits:
+    cpu: 1
+    memory: 1.5Gi
+  requests:
+    cpu: 1
+    memory: 1.5Gi
